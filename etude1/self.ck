@@ -141,7 +141,7 @@ spork ~changePan();
 // instantiate
 Word2Vec model;
 // pre-trained model to load
-me.dir() + "glove-wiki-gigaword-50-tsne-2.txt" => string filepath;
+me.dir() + "lib/glove-wiki-gigaword-50-tsne-2.txt" => string filepath;
 // load pre-trained model (see URLs above for download)
 if (!model.load(filepath)) {
     <<< "cannot load model:", filepath >>>;
@@ -194,11 +194,8 @@ chout.flush();
 
 // loop over stanzas
 for (int s; s < NUM_SECTIONS; s++) {
-    // grab a word out of the "good" bag
     feelingWords[Math.random2(0, feelingWords.size() - 1)] => feeling;
-    // grab a word out of the "bad" bag
     egoWords[Math.random2(0, egoWords.size() - 1)] => ego;
-    // grab a word out of the "other" bag
     verbs[Math.random2(0, verbs.size() - 1)] => verb;
     // print a stanza
     stanza(feeling, ego, verb, LINES_PER_STANZA);
