@@ -1,7 +1,7 @@
 *.pdf
 *.txt
 lib/**
-!lib/.gitkeep
+!.gitkeep
 # examples/
 *.wav
 *.mp4
