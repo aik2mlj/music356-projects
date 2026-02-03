@@ -6,3 +6,4 @@ lib/**
 *.wav
 *.mp4
 *.unitypackage
+imgui.ini
