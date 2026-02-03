@@ -13,7 +13,8 @@ C _con;
 
 // Shared audio bus: all shape synths route here before going to dac
 // This allows FFT analysis of the generated sound for mosaic synthesis
-Gain preMix => dac;
+Gain preMix => Gain postMix => dac;
+1 => postMix.gain;
 0.8 => preMix.gain;
 
 // Initialize Mouse Manager ===================================================
@@ -91,11 +92,13 @@ fun void select_drawtool(Mouse @m, Draw draws[], DrawEvent @drawEvent) {
 
 // Mosaic synthesizer: analyzes preMix audio and synthesizes similar samples
 Mosaic mosaic;
+false => int mosaicEnabled;
 // input: pre-extracted model file
 if (me.args() > 0) {
     me.arg(0) => string FEATURES_FILE;
     if (mosaic.init(FEATURES_FILE, preMix)) {
         spork ~ mosaic.run();
+        true => mosaicEnabled;
         <<< "Mosaic synthesizer enabled with:", FEATURES_FILE >>>;
     }
 } else {
@@ -104,6 +107,40 @@ if (me.args() > 0) {
     <<< " |- (running without mosaic synthesis)", "" >>>;
 }
 
+// Audio mode switching: m = mosaic only, p = preMix only, b = both (default)
+// Audio mode: 0 = both, 1 = mosaic only, 2 = preMix only
+0 => int audioMode;
+
+<<< "Audio mode keys: M (mosaic only), P (preMix only), B (both)", "" >>>;
+
 while (true) {
     GG.nextFrame() => now;
+
+    // 'm' key - mosaic only
+    if (UI.isKeyPressed(UI_Key.M, false)) {
+        if (audioMode != 1) {
+            1 => audioMode;
+            0 => postMix.gain;          // disconnect preMix
+            1 => mosaic.mosaicOut.gain; // connect mosaic
+            <<< "[mode] Mosaic only" >>>;
+        }
+    }
+    // 'p' key - preMix only
+    else if (UI.isKeyPressed(UI_Key.P, false)) {
+        if (audioMode != 2) {
+            2 => audioMode;
+            0 => mosaic.mosaicOut.gain; // disconnect mosaic
+            1 => postMix.gain;          // ensure preMix connected
+            <<< "[mode] PreMix only" >>>;
+        }
+    }
+    // 'b' key - both
+    else if (UI.isKeyPressed(UI_Key.B, false)) {
+        if (audioMode != 0) {
+            0 => audioMode;
+            1 => postMix.gain;          // ensure preMix connected
+            1 => mosaic.mosaicOut.gain; // ensure mosaic connected
+            <<< "[mode] Both (preMix + mosaic)" >>>;
+        }
+    }
 }
