@@ -2,4 +2,7 @@
 *.txt
 lib/**
 !lib/.gitkeep
-examples/
+# examples/
+*.wav
+*.mp4
+*.unitypackage
