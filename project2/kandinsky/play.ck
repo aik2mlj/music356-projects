@@ -13,11 +13,9 @@ class Play {
 public class LinePlay extends Play {
     FrencHrn a => NRev rev => Pan2 pan;
 
-    fun void init(Gain @mix) {
-        pan => mix;
-    }
+    fun void init(Gain @mix) { pan => mix; }
     0.2 => a.gain;
-    0.1 => rev.mix;
+    0 => rev.mix;
 
     fun setColor(vec3 color) {
         Color.rgb2hsv(color) => vec3 hsv;
@@ -50,12 +48,10 @@ public class LinePlay extends Play {
 public class CirclePlay extends Play {
     SinOsc m => SinOsc a => NRev rev => Pan2 pan;
 
-    fun void init(Gain @mix) {
-        pan => mix;
-    }
+    fun void init(Gain @mix) { pan => mix; }
     2 => a.sync; // FM synth
 
-    0.1 => rev.mix;
+    0 => rev.mix;
     0 => a.gain;
     // NRev rev[2];
     // for (int ch; ch < 2; ++ch)
@@ -99,11 +95,9 @@ public class CirclePlay extends Play {
 public class PlanePlay extends Play {
     SqrOsc a => NRev rev => Pan2 pan;
 
-    fun void init(Gain @mix) {
-        pan => mix;
-    }
+    fun void init(Gain @mix) { pan => mix; }
     0 => a.gain;
-    0.1 => rev.mix;
+    0 => rev.mix;
 
     fun setColor(vec3 color) {
         Color.rgb2hsv(color) => vec3 hsv;

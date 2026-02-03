@@ -34,8 +34,8 @@ public class Mosaic {
     SndBuf buffers[NUM_VOICES];
     ADSR envs[NUM_VOICES];
     Pan2 pans[NUM_VOICES];
-    Gain mosaicOut => dac;
-    0.5 => mosaicOut.gain;
+    Gain mosaicOut;
+    1.0 => mosaicOut.gain;
 
     //--------------------------------------------------------------------------
     // data structures
@@ -69,7 +69,7 @@ public class Mosaic {
     0 => int which;
 
     // RMS threshold: only synthesize when there's actual sound
-    0.01 => float RMS_THRESHOLD;
+    0.0001 => float RMS_THRESHOLD;
 
     //--------------------------------------------------------------------------
     // initialize with features file and preMix gain
@@ -77,6 +77,9 @@ public class Mosaic {
     fun int init(string featuresFile, Gain @preMix) {
         // connect preMix to FFT for analysis
         preMix => fft;
+
+        // connect mosaic output to dac
+        mosaicOut => dac;
 
         // now we can upchuck to get dimensions
         combo.upchuck();
@@ -137,8 +140,12 @@ public class Mosaic {
         filename => sound.read;
         ((win.windowTime::second) / samp) $ int => sound.pos;
 
-        chout <= "[mosaic] synth: " <= win.uid <= "[" <= filename <= ":" <= win.windowTime <=
-            "s]" <= IO.newline();
+        <<< "[mosaic] synth uid:", win.uid, "file:", filename, "pos:", sound.pos(),
+           "samples:", sound.samples() >>>;
+
+        // make sure sound plays
+        1 => sound.gain;
+        1 => sound.rate;
 
         envelope.keyOn();
         (EXTRACT_TIME * 3) - envelope.releaseTime() => now;
@@ -170,8 +177,12 @@ public class Mosaic {
                 NUM_FRAMES /=> featureMean[d];
             }
 
+            // debug: print RMS value periodically
+            <<< "[mosaic] RMS:", featureMean[2] >>>;
+
             // check RMS threshold - only trigger if there's sound
             if (featureMean[2] > RMS_THRESHOLD) {
+                <<< "[mosaic] triggering synthesis!" >>>;
                 knn.search(featureMean, K, knnResult);
                 spork ~ synthesize(knnResult[Math.random2(0, knnResult.size() - 1)]);
             }
