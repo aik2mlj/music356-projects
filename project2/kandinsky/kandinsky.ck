@@ -6,9 +6,15 @@
 // date: Fall 2024
 //-----------------------------------------------------------------------------
 @import "draw.ck"
+@import "mosaic.ck"
 
 // mitigate the weird bug that static values only become valid after class instantiation
 C _con;
+
+// Shared audio bus: all shape synths route here before going to dac
+// This allows FFT analysis of the generated sound for mosaic synthesis
+Gain preMix => dac;
+0.8 => preMix.gain;
 
 // Initialize Mouse Manager ===================================================
 Mouse mouse;
@@ -40,6 +46,7 @@ C.HEIGHT_GLB => background.scaY;
 @(1., 1., 1.) * 5 => background.color;
 
 DrawEvent drawEvent;
+preMix @=> drawEvent.preMix; // pass audio bus to drawEvent for shapes
 // polymorphism
 Draw @draws[4];
 LineDraw lineDraw(mouse, drawEvent) @=> draws[0];
@@ -82,6 +89,20 @@ fun void select_drawtool(Mouse @m, Draw draws[], DrawEvent @drawEvent) {
     }
 }
 
+// Mosaic synthesizer: analyzes preMix audio and synthesizes similar samples
+Mosaic mosaic;
+// input: pre-extracted model file
+if (me.args() > 0) {
+    me.arg(0) => string FEATURES_FILE;
+    if (mosaic.init(FEATURES_FILE, preMix)) {
+        spork ~ mosaic.run();
+        <<< "Mosaic synthesizer enabled with:", FEATURES_FILE >>>;
+    }
+} else {
+    <<< "usage: chuck kandinsky.ck:INPUT", "" >>>;
+    <<< " |- INPUT: model file (.txt) containing extracted feature vectors", "" >>>;
+    <<< " |- (running without mosaic synthesis)", "" >>>;
+}
 
 while (true) {
     GG.nextFrame() => now;

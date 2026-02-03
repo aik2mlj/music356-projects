@@ -42,7 +42,7 @@ public class Line extends Shape {
     vec3 color0;
     LinePlay play;
 
-    fun Line(vec2 start, vec2 end, vec3 color, float width, float depth) {
+    fun Line(vec2 start, vec2 end, vec3 color, float width, float depth, Gain @mix) {
         start => this.start;
         end => this.end;
         end - start => this.dd;
@@ -53,6 +53,7 @@ public class Line extends Shape {
 
         width => width0 => g.width;
         color => color0 => g.color;
+        play.init(mix);
         play.setColor(color);
         g.positions([start, end]);
         depth => this.posZ;
@@ -149,12 +150,13 @@ public class Circle extends Shape {
     float sca0;
     vec3 color0;
 
-    fun Circle(vec2 center, float r, vec3 color, float depth) {
+    fun Circle(vec2 center, float r, vec3 color, float depth, Gain @mix) {
         center => this.center;
         r => this.r;
         @(center.x, center.y, depth) => this.pos;
         r * 2. => sca0 => this.sca;
         color => color0 => mat.color;
+        play.init(mix);
         play.setColor(color);
     }
 
@@ -231,7 +233,7 @@ public class Plane extends Shape {
     vec3 sca0;
     vec3 color0;
 
-    fun Plane(vec2 pos, float scale, vec3 color, float depth) {
+    fun Plane(vec2 pos, float scale, vec3 color, float depth, Gain @mix) {
         // might be useless, only square
         @(pos.x, pos.y, depth) => this.pos;
         scale => this.sca;
@@ -239,10 +241,11 @@ public class Plane extends Shape {
         @(pos.x - scale / 2., pos.y - scale / 2.) => this.start;
         @(pos.x + scale / 2., pos.y + scale / 2.) => this.end;
         color => color0 => mat.color;
+        play.init(mix);
         play.setColor(color);
     }
 
-    fun Plane(vec2 start, vec2 end, vec3 color, float depth) {
+    fun Plane(vec2 start, vec2 end, vec3 color, float depth, Gain @mix) {
         // rectangular
         start => this.start;
         end => this.end;
@@ -252,6 +255,7 @@ public class Plane extends Shape {
         Math.fabs((start - end).y) => this.scaY;
         this.sca() => sca0;
         color => color0 => mat.color;
+        play.init(mix);
         play.setColor(color);
     }
 

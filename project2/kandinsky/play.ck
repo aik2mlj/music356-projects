@@ -11,7 +11,11 @@ class Play {
 }
 
 public class LinePlay extends Play {
-    FrencHrn a => NRev rev => Pan2 pan => dac;
+    FrencHrn a => NRev rev => Pan2 pan;
+
+    fun void init(Gain @mix) {
+        pan => mix;
+    }
     0.2 => a.gain;
     0.1 => rev.mix;
 
@@ -44,7 +48,11 @@ public class LinePlay extends Play {
 }
 
 public class CirclePlay extends Play {
-    SinOsc m => SinOsc a => NRev rev => Pan2 pan => dac;
+    SinOsc m => SinOsc a => NRev rev => Pan2 pan;
+
+    fun void init(Gain @mix) {
+        pan => mix;
+    }
     2 => a.sync; // FM synth
 
     0.1 => rev.mix;
@@ -89,7 +97,11 @@ public class CirclePlay extends Play {
 }
 
 public class PlanePlay extends Play {
-    SqrOsc a => NRev rev => Pan2 pan => dac;
+    SqrOsc a => NRev rev => Pan2 pan;
+
+    fun void init(Gain @mix) {
+        pan => mix;
+    }
     0 => a.gain;
     0.1 => rev.mix;
 

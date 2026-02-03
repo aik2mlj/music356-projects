@@ -161,7 +161,7 @@ public class LineDraw extends Draw {
 
     fun Shape @createShape(vec2 start, vec2 end) {
         // generate a new line
-        return new Line(start, end, drawEvent.color, 0.1, drawEvent.depth);
+        return new Line(start, end, drawEvent.color, 0.1, drawEvent.depth, drawEvent.preMix);
     }
 }
 
@@ -187,7 +187,7 @@ public class CircleDraw extends Draw {
         Math.sqrt(r.x * r.x + r.y * r.y) => float radius;
 
         // generate a new circle
-        return new Circle(start, radius, drawEvent.color, drawEvent.depth);
+        return new Circle(start, radius, drawEvent.color, drawEvent.depth, drawEvent.preMix);
     }
 }
 
@@ -207,7 +207,7 @@ public class PlaneDraw extends Draw {
 
     fun Shape @createShape(vec2 start, vec2 end) {
         // generate a new plane
-        return new Plane(start, end, drawEvent.color, drawEvent.depth);
+        return new Plane(start, end, drawEvent.color, drawEvent.depth, drawEvent.preMix);
     }
 }
 
@@ -273,6 +273,7 @@ public class DrawEvent extends Event {
     Draw @draw;           // reference to the selected drawtool
     vec3 color;           // selected color
     -50 => float depth; // current depth of the drawed object
+    Gain @preMix;         // shared audio bus for all shapes
 
     // all the drawed shapes
     Shape @shapes[1000];
