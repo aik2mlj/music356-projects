@@ -57,16 +57,22 @@ fft =^ Flux flux =^ combo;
 // add spectral feature: RMS
 fft =^ RMS rms =^ combo;
 // add spectral feature: MFCC
-fft =^ MFCC mfcc =^ combo;
+// fft =^ MFCC mfcc =^ combo;
+
+// added: choose features for phase 1 experiments
+// fft =^ RollOff rolloff =^ combo;
+// fft =^ Chroma chroma =^ combo;
+// fft =^ Kurtosis kurtosis =^ combo;
+// fft =^ ZeroX zerox =^ combo;
 
 
 //---------------------------------------------------------------------
 // setting analysis parameters -- important for tuning your extraction
 //---------------------------------------------------------------------
 // set number of coefficients in MFCC (how many we get out)
-20 => mfcc.numCoeffs;
+// 20 => mfcc.numCoeffs;
 // set number of mel filters in MFCC (internal to MFCC)
-10 => mfcc.numFilters;
+// 10 => mfcc.numFilters;
 
 // do one .upchuck() so FeatureCollector knows how many total dimension
 combo.upchuck();

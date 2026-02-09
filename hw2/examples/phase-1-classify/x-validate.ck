@@ -102,6 +102,7 @@ normalizeData();
 // shuffle the data
 shuffleData();
 // cross validation
+0.0 => float avg_accuracy;
 for (0 => int i; i < numFolds / numTestFolds; i++) {
     // prepare training and testing data
     prepareData(i);
@@ -115,9 +116,13 @@ for (0 => int i; i < numFolds / numTestFolds; i++) {
         // aggregate accuracy
         knnResult[testLabelsInt[j]] +=> accuracy;
     }
+    accuracy / testLabelsInt.size() => accuracy;
+    accuracy +=> avg_accuracy;
     // print accuracy
-    chout <= "fold " + i + " accuracy: " + (accuracy / testLabelsInt.size()) <= IO.newline();
+    chout <= "fold " + i + " accuracy: " + accuracy <= IO.newline();
 }
+avg_accuracy / (numFolds / numTestFolds) => avg_accuracy;
+chout <= "average accuracy: " + avg_accuracy <= IO.newline();
 
 
 //------------------------------------------------------------------------------
