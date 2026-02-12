@@ -6,6 +6,7 @@
 public class Shape extends GGen {
     Shred @animateShred;
     vec3 color0;
+    0 => int inverted;
 
     fun void stop() {
         // stop playing, useful when erasing shapes
@@ -32,15 +33,18 @@ public class Shape extends GGen {
 
     fun int isHovered(Mouse @mouse) { return false; }
 
-    fun vec3 _getRevertedColor(vec3 color, int invert) {
-        if (invert)
+    fun vec3 _getRevertedColor(vec3 color) {
+        if (inverted == 0) {
+            1 => inverted;
             return @(1 - color.x, 1 - color.y, 1 - color.z);
-        else
+        } else {
+            0 => inverted;
             return color;
+        }
     }
 
     // polymorphic function for color inversion
-    fun void invertColor(int invert) { <<< " invertColor not implemented " >>>; }
+    fun void invertColor() { <<< " invertColor not implemented " >>>; }
 }
 
 public class Line extends Shape {
@@ -144,7 +148,7 @@ public class Line extends Shape {
         }
     }
 
-    fun void invertColor(int invert) { _getRevertedColor(this.color0, invert) => this.color; }
+    fun void invertColor() { _getRevertedColor(this.color0) => this.color; }
 }
 
 public class Circle extends Shape {
@@ -232,7 +236,7 @@ public class Circle extends Shape {
         }
     }
 
-    fun void invertColor(int invert) { _getRevertedColor(this.color0, invert) => this.color; }
+    fun void invertColor() { _getRevertedColor(this.color0) => this.color; }
 }
 
 public class Plane extends Shape {
@@ -328,5 +332,5 @@ public class Plane extends Shape {
         }
     }
 
-    fun void invertColor(int invert) { _getRevertedColor(this.color0, invert) => this.color; }
+    fun void invertColor() { _getRevertedColor(this.color0) => this.color; }
 }

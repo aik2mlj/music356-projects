@@ -128,7 +128,6 @@ while (true) {
             1 => audioMode;
             0 => postMix.gain;          // disconnect preMix
             1 => mosaic.mosaicOut.gain; // connect mosaic
-            invertColor(1);
             <<< "[mode] Mosaic only" >>>;
         }
     }
@@ -138,7 +137,6 @@ while (true) {
             2 => audioMode;
             0 => mosaic.mosaicOut.gain; // disconnect mosaic
             1 => postMix.gain;          // ensure preMix connected
-            invertColor(0);
             <<< "[mode] PreMix only" >>>;
         }
     }
@@ -151,12 +149,16 @@ while (true) {
             <<< "[mode] Both (preMix + mosaic)" >>>;
         }
     }
+    // 'r' key - invert color
+    else if (UI.isKeyPressed(UI_Key.R, false)) {
+        invertColor();
+    }
 }
 
-fun void invertColor(int invert) {
+fun void invertColor() {
     for (auto @shape : drawEvent.shapes) {
         if (shape != null) {
-            shape.invertColor(invert);
+            shape.invertColor();
         }
     }
 }
