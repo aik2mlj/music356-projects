@@ -2,11 +2,47 @@
 @import "play.ck"
 
 // Various object class for painting ==========================================
+public class NoiseShader {
+    // create the custom shader description
+    ShaderDesc shader_desc;
+    me.dir() + "noise.wgsl" => shader_desc.vertexPath;
+    me.dir() + "noise.wgsl" => shader_desc.fragmentPath;
+    // default vertex layout (each vertex has a float3 position, float3 normal, float2 uv)
+    [VertexFormat.Float3, VertexFormat.Float3, VertexFormat.Float2] @=> shader_desc.vertexLayout;
+
+    // compile the shader
+    Shader noise_shader(shader_desc);
+
+    // assign shader to a material
+    Material noise_mat;
+    noise_mat.shader(noise_shader);
+
+    1.0 => float utime;
+    noise_mat.uniformFloat(0, utime);
+
+    fun void update() {
+        while (true) {
+            GG.nextFrame() => now;
+            utime + GG.dt() => utime;
+            noise_mat.uniformFloat(0, utime);
+        }
+    }
+}
 
 public class Shape extends GGen {
     Shred @animateShred;
+    Material @material;
+    GMesh @gMesh;
+    Play @play;
+    NoiseShader noiseShader;
+    Shred @shaderShred;
     vec3 color0;
+    vec3 colorNow;
     0 => int inverted;
+    0 => int usingShader;
+
+    Gain @sndBus;
+    Gain @anaBus;
 
     fun void stop() {
         // stop playing, useful when erasing shapes
@@ -45,18 +81,42 @@ public class Shape extends GGen {
 
     // polymorphic function for color inversion
     fun void invertColor() { <<< " invertColor not implemented " >>>; }
+
+    // material as noise shader
+    fun void _attachShader() {
+        noiseShader.noise_mat.uniformFloat3(1, colorNow);
+        gMesh.mat(noiseShader.noise_mat);
+        spork ~ noiseShader.update() @=> shaderShred;
+    }
+    fun void _detachShader() {
+        gMesh.mat(material);
+        if (shaderShred != null)
+            shaderShred.exit();
+    }
+    fun void toggleShader() {
+        if (usingShader) {
+            _detachShader();
+            0 => usingShader;
+        } else {
+            _attachShader();
+            1 => usingShader;
+        }
+    }
 }
 
 public class Line extends Shape {
     GLines g --> this;
+    g @=> gMesh;
+    g.mat() @=> material;
     vec2 start, end, dd;
     float cos, sin;
     float length;
     float slope;
     float width0;
-    LinePlay play;
+    new LinePlay @=> play;
 
-    fun Line(vec2 start, vec2 end, vec3 color, float width, float depth, Gain @mix) {
+    fun Line(vec2 start, vec2 end, vec3 color, float width, float depth, Gain @sndBus,
+             Gain @anaBus) {
         start => this.start;
         end => this.end;
         end - start => this.dd;
@@ -66,8 +126,8 @@ public class Line extends Shape {
         dd.y / length => this.sin;
 
         width => width0 => g.width;
-        color => color0 => g.color;
-        play.init(mix);
+        color => color0 => colorNow => g.color;
+        play.init(sndBus, anaBus);
         play.setColor(color);
         g.positions([start, end]);
         depth => this.posZ;
@@ -126,7 +186,7 @@ public class Line extends Shape {
             getY(x) => float y;
             if (play.state == 0)
                 spork ~ animate(speed) @=> animateShred;
-            play.play(y2pan(y, speed));
+            play.play(y2pan(y, speed), 0);
             return true;
         } else {
             stop();
@@ -140,7 +200,7 @@ public class Line extends Shape {
             getX(y) => float x;
             if (play.state == 0)
                 spork ~ animate(speed) @=> animateShred;
-            play.play(x2pan(x, speed));
+            play.play(x2pan(x, speed), 0);
             return true;
         } else {
             stop();
@@ -148,30 +208,34 @@ public class Line extends Shape {
         }
     }
 
-    fun void invertColor() { _getRevertedColor(this.color0) => this.color; }
+    fun void invertColor() { _getRevertedColor(this.color0) => colorNow => this.color; }
+    fun void toggleShader() {
+        <<< "GLines seems not able to change material, skipping toggleShader..." >>>;
+    }
 }
 
 public class Circle extends Shape {
     GCircle g --> this;
-    FlatMaterial mat;
+    g @=> gMesh;
+    FlatMaterial mat @=> material;
     g.mat(mat);
     CircleGeometry geo(.5, 96, 0., 2 * Math.pi);
     g.geo(geo);
 
-    CirclePlay play;
+    new CirclePlay @=> play;
 
     vec2 center;
     float r;
 
     float sca0;
 
-    fun Circle(vec2 center, float r, vec3 color, float depth, Gain @mix) {
+    fun Circle(vec2 center, float r, vec3 color, float depth, Gain @sndBus, Gain @anaBus) {
         center => this.center;
         r => this.r;
         @(center.x, center.y, depth) => this.pos;
         r * 2. => sca0 => this.sca;
-        color => color0 => mat.color;
-        play.init(mix);
+        color => color0 => colorNow => mat.color;
+        play.init(sndBus, anaBus);
         play.setColor(color);
     }
 
@@ -236,32 +300,36 @@ public class Circle extends Shape {
         }
     }
 
-    fun void invertColor() { _getRevertedColor(this.color0) => this.color; }
+    fun void invertColor() {
+        _getRevertedColor(this.color0) => colorNow => this.color;
+        noiseShader.noise_mat.uniformFloat3(1, colorNow);
+    }
 }
 
 public class Plane extends Shape {
     GPlane g --> this;
-    FlatMaterial mat;
-    vec2 start, end;
+    g @=> gMesh;
+    FlatMaterial mat @=> material;
     g.mat(mat);
+    vec2 start, end;
 
-    PlanePlay play;
+    new PlanePlay @=> play;
 
     vec3 sca0;
 
-    fun Plane(vec2 pos, float scale, vec3 color, float depth, Gain @mix) {
+    fun Plane(vec2 pos, float scale, vec3 color, float depth, Gain @sndBus, Gain @anaBus) {
         // might be useless, only square
         @(pos.x, pos.y, depth) => this.pos;
         scale => this.sca;
         this.sca() => sca0;
         @(pos.x - scale / 2., pos.y - scale / 2.) => this.start;
         @(pos.x + scale / 2., pos.y + scale / 2.) => this.end;
-        color => color0 => mat.color;
-        play.init(mix);
+        color => color0 => colorNow => mat.color;
+        play.init(sndBus, anaBus);
         play.setColor(color);
     }
 
-    fun Plane(vec2 start, vec2 end, vec3 color, float depth, Gain @mix) {
+    fun Plane(vec2 start, vec2 end, vec3 color, float depth, Gain @sndBus, Gain @anaBus) {
         // rectangular
         start => this.start;
         end => this.end;
@@ -270,8 +338,8 @@ public class Plane extends Shape {
         Math.fabs((start - end).x) => this.scaX;
         Math.fabs((start - end).y) => this.scaY;
         this.sca() => sca0;
-        color => color0 => mat.color;
-        play.init(mix);
+        color => color0 => colorNow => mat.color;
+        play.init(sndBus, anaBus);
         play.setColor(color);
     }
 
@@ -332,5 +400,8 @@ public class Plane extends Shape {
         }
     }
 
-    fun void invertColor() { _getRevertedColor(this.color0) => this.color; }
+    fun void invertColor() {
+        _getRevertedColor(this.color0) => colorNow => this.color;
+        noiseShader.noise_mat.uniformFloat3(1, colorNow);
+    }
 }

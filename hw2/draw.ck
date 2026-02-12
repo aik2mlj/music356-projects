@@ -161,7 +161,8 @@ public class LineDraw extends Draw {
 
     fun Shape @createShape(vec2 start, vec2 end) {
         // generate a new line
-        return new Line(start, end, drawEvent.color, 0.1, drawEvent.depth, drawEvent.preMix);
+        return new Line(start, end, drawEvent.color, 0.1, drawEvent.depth, drawEvent.sndBus,
+                        drawEvent.anaBus);
     }
 }
 
@@ -187,7 +188,8 @@ public class CircleDraw extends Draw {
         Math.sqrt(r.x * r.x + r.y * r.y) => float radius;
 
         // generate a new circle
-        return new Circle(start, radius, drawEvent.color, drawEvent.depth, drawEvent.preMix);
+        return new Circle(start, radius, drawEvent.color, drawEvent.depth, drawEvent.sndBus,
+                          drawEvent.anaBus);
     }
 }
 
@@ -207,7 +209,8 @@ public class PlaneDraw extends Draw {
 
     fun Shape @createShape(vec2 start, vec2 end) {
         // generate a new plane
-        return new Plane(start, end, drawEvent.color, drawEvent.depth, drawEvent.preMix);
+        return new Plane(start, end, drawEvent.color, drawEvent.depth, drawEvent.sndBus,
+                         drawEvent.anaBus);
     }
 }
 
@@ -273,7 +276,8 @@ public class DrawEvent extends Event {
     Draw @draw;           // reference to the selected drawtool
     vec3 color;           // selected color
     -50 => float depth; // current depth of the drawed object
-    Gain @preMix;         // shared audio bus for all shapes
+    Gain @sndBus;         // shared bus: sndBus (direct to output sound)
+    Gain @anaBus;         // shared bus: anaBus (for analysis)
 
     // all the drawed shapes
     Shape @shapes[1000];
@@ -346,13 +350,13 @@ public class PlayLine extends GGen {
             GWindow.scrollY() * 0.5 +=> speed;
             GG.dt() * speed => float t;
 
-            if (drawEvent.isNone() && GWindow.mouseLeftDown() && !isHoveredToolbar()) {
-                // drawing not activated, can change playline position by left click
-                if (axis == X_AXIS)
-                    mouse.pos.x + C.WIDTH / 2 => line.posX;
-                else
-                    mouse.pos.y + C.HEIGHT - C.HEIGHT_GLB / 2 => line.posY;
-            }
+            // if (drawEvent.isNone() && GWindow.mouseLeftDown() && !isHoveredToolbar()) {
+            //     // drawing not activated, can change playline position by left click
+            //     if (axis == X_AXIS)
+            //         mouse.pos.x + C.WIDTH / 2 => line.posX;
+            //     else
+            //         mouse.pos.y + C.HEIGHT - C.HEIGHT_GLB / 2 => line.posY;
+            // }
 
             if (GWindow.mouseRightDown()) {
                 // right click to switch the sweeping axis!
@@ -390,6 +394,38 @@ public class PlayLine extends GGen {
                 line.posY() + C.HEIGHT_GLB / 2 - C.HEIGHT => float y;
 
                 drawEvent.touchY(y, speed);
+            }
+        }
+    }
+}
+
+public class ShaderChanger {
+    Mouse @mouse;
+    DrawEvent @drawEvent;
+
+    fun @construct(Mouse @m, DrawEvent @d) {
+        m @=> mouse;
+        d @=> drawEvent;
+    }
+
+    fun int isHoveredToolbar() {
+        // if the mouse is hovered on toolbar
+        return mouse.pos.y < C.DOWN;
+    }
+
+    fun listenToMouse() {
+        while (true) {
+            GG.nextFrame() => now;
+
+            if (drawEvent.isNone() && GWindow.mouseLeftDown() && !isHoveredToolbar()) {
+                // use left click to change the material to noiseShader
+                for (drawEvent.length - 1 => int i; i >= 0; --i) {
+                    if (drawEvent.shapes[i].isHovered(mouse)) {
+                        drawEvent.shapes[i].toggleShader();
+                        drawEvent.shapes[i].play.toggleAna();
+                        break;
+                    }
+                }
             }
         }
     }

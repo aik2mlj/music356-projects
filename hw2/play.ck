@@ -1,19 +1,44 @@
 @import "constant.ck"
 
-class Play {
+public class Play {
     0 => static int NONE;   // not played
     1 => static int ACTIVE; // playing
     0 => int state;
+    0 => int toAna; // 1 when gain is connected to anaBus instead of sndBus
+
+    Gain sndGain, anaGain;
+    // sndBus: output to sound
+    // anaBus: bus for analyzer
+    fun void init(Gain @sndBus, Gain @anaBus) {
+        // only enable sndGain
+        1 => sndGain.gain;
+        0 => anaGain.gain;
+        // connect to sound bus & analysis bus
+        sndGain => sndBus;
+        anaGain => anaBus;
+    }
 
     fun void setColor(vec3 color) {}
-    fun void play() {}
+    fun void play(float p, float amount) {}
     fun void stop() {}
+
+    fun void toggleAna() {
+        if (toAna) {
+            0 => toAna;
+            1 => sndGain.gain;
+            0 => anaGain.gain;
+        } else {
+            1 => toAna;
+            0 => sndGain.gain;
+            1 => anaGain.gain;
+        }
+    }
 }
 
 public class LinePlay extends Play {
-    FrencHrn a => NRev rev => Pan2 pan;
+    FrencHrn a => NRev rev => Pan2 pan => sndGain;
+    pan => anaGain;
 
-    fun void init(Gain @mix) { pan => mix; }
     0.2 => a.gain;
     0.1 => rev.mix;
 
@@ -22,10 +47,10 @@ public class LinePlay extends Play {
         // map value(brightness) to pitch
         Std.mtof(Math.map2(hsv.z, 0., 1., 30, 100)) => a.freq;
         // map saturation to loudness
-        Math.map2(hsv.y, 0., 1., .1, 0.7) => a.gain;
+        Math.map2(hsv.y, 0., 1., .1, 0.5) => a.gain;
     }
 
-    fun void play(float p) {
+    fun void play(float p, float amount) {
         // <<< "play" >>>;
         // map pan
         p => pan.pan;
@@ -46,9 +71,9 @@ public class LinePlay extends Play {
 }
 
 public class CirclePlay extends Play {
-    SinOsc m => SinOsc a => NRev rev => Pan2 pan;
+    SinOsc m => SinOsc a => NRev rev => Pan2 pan => sndGain;
+    pan => anaGain;
 
-    fun void init(Gain @mix) { pan => mix; }
     2 => a.sync; // FM synth
 
     0.1 => rev.mix;
@@ -93,9 +118,9 @@ public class CirclePlay extends Play {
 }
 
 public class PlanePlay extends Play {
-    SqrOsc a => NRev rev => Pan2 pan;
+    SqrOsc a => NRev rev => Pan2 pan => sndGain;
+    pan => anaGain;
 
-    fun void init(Gain @mix) { pan => mix; }
     0 => a.gain;
     0.1 => rev.mix;
 
@@ -112,7 +137,7 @@ public class PlanePlay extends Play {
         // map pan
         p => pan.pan;
         // map length to loudness
-        Math.map2(amount, 0., 1., 0., 0.8) => a.gain;
+        Math.map2(amount, 0., 1., 0., 0.5) => a.gain;
 
         if (state == NONE) {
             ACTIVE => state;
