@@ -14,9 +14,15 @@ public class C {
     DOWN_GLB + TOOLBAR_SIZE + TOOLBAR_PADDING => static float DOWN;     // the bottom of the canvas
 
     // color
-    @(242., 169., 143.) / 255. * 3 => static vec3 COLOR_ICONBG_ACTIVE;
-    @(2, 2, 2) => static vec3 COLOR_ICONBG_NONE;
-    @(.2, .2, .2) => static vec3 COLOR_ICON;
+    // light
+    // @(242., 169., 143.) / 255. * 3 => static vec3 COLOR_ICONBG_ACTIVE;
+    // @(2, 2, 2) => static vec3 COLOR_ICONBG_NONE;
+    // @(.2, .2, .2) => static vec3 COLOR_ICON;
+    // dark
+    @(242., 169., 143.) / 255. => static vec3 COLOR_ICONBG_ACTIVE;
+    @(2, 2, 2) * 0 => static vec3 COLOR_ICONBG_NONE;
+    @(.1, .1, .1) => static vec3 COLOR_ICON;
+    @(1, 1, 1) * 0.05 => static vec3 COLOR_PLAYLINE;
 }
 
 <<< C.SPEED >>>;

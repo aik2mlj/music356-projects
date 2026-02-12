@@ -316,7 +316,7 @@ public class DrawEvent extends Event {
 
 public class PlayLine extends GGen {
     GLines line --> this;
-    @(0, 0, 0) => line.color;
+    C.COLOR_PLAYLINE => line.color;
     0.01 => line.width;
     line.positions([@(C.LEFT, C.DOWN), @(C.LEFT, C.UP)]);
     2 => float speed;

@@ -5,6 +5,7 @@
 
 public class Shape extends GGen {
     Shred @animateShred;
+    vec3 color0;
 
     fun void stop() {
         // stop playing, useful when erasing shapes
@@ -30,6 +31,16 @@ public class Shape extends GGen {
     }
 
     fun int isHovered(Mouse @mouse) { return false; }
+
+    fun vec3 _getRevertedColor(vec3 color, int invert) {
+        if (invert)
+            return @(1 - color.x, 1 - color.y, 1 - color.z);
+        else
+            return color;
+    }
+
+    // polymorphic function for color inversion
+    fun void invertColor(int invert) { <<< " invertColor not implemented " >>>; }
 }
 
 public class Line extends Shape {
@@ -39,7 +50,6 @@ public class Line extends Shape {
     float length;
     float slope;
     float width0;
-    vec3 color0;
     LinePlay play;
 
     fun Line(vec2 start, vec2 end, vec3 color, float width, float depth, Gain @mix) {
@@ -62,7 +72,7 @@ public class Line extends Shape {
     fun void stop() {
         play.stop();
         width0 => this.width;
-        color0 => this.color;
+        // color0 => this.color;
         if (animateShred != null)
             animateShred.exit();
     }
@@ -133,6 +143,8 @@ public class Line extends Shape {
             return false;
         }
     }
+
+    fun void invertColor(int invert) { _getRevertedColor(this.color0, invert) => this.color; }
 }
 
 public class Circle extends Shape {
@@ -148,7 +160,6 @@ public class Circle extends Shape {
     float r;
 
     float sca0;
-    vec3 color0;
 
     fun Circle(vec2 center, float r, vec3 color, float depth, Gain @mix) {
         center => this.center;
@@ -170,7 +181,7 @@ public class Circle extends Shape {
     fun void stop() {
         play.stop();
         sca0 => this.sca;
-        color0 => this.color;
+        // color0 => this.color;
         if (animateShred != null)
             animateShred.exit();
     }
@@ -220,6 +231,8 @@ public class Circle extends Shape {
             return false;
         }
     }
+
+    fun void invertColor(int invert) { _getRevertedColor(this.color0, invert) => this.color; }
 }
 
 public class Plane extends Shape {
@@ -231,7 +244,6 @@ public class Plane extends Shape {
     PlanePlay play;
 
     vec3 sca0;
-    vec3 color0;
 
     fun Plane(vec2 pos, float scale, vec3 color, float depth, Gain @mix) {
         // might be useless, only square
@@ -262,7 +274,7 @@ public class Plane extends Shape {
     fun void stop() {
         play.stop();
         sca0 => this.sca;
-        color0 => this.color;
+        // color0 => this.color;
         if (animateShred != null)
             animateShred.exit();
     }
@@ -315,4 +327,6 @@ public class Plane extends Shape {
             return false;
         }
     }
+
+    fun void invertColor(int invert) { _getRevertedColor(this.color0, invert) => this.color; }
 }

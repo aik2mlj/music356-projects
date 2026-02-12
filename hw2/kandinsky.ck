@@ -32,19 +32,25 @@ GG.scene().light() @=> GLight light;
 0. => light.intensity;
 
 // bloom
-GG.outputPass() @=> OutputPass output_pass;
-GG.renderPass() --> BloomPass bloom_pass --> output_pass;
-bloom_pass.threshold(5);
+// GG.outputPass() @=> OutputPass output_pass;
+// GG.renderPass() --> BloomPass bloom_pass --> output_pass;
+// bloom_pass.threshold(5);
+// bloom_pass.intensity(1);
+// bloom_pass.input(GG.renderPass().colorOutput());
+// output_pass.input(bloom_pass.colorOutput());
+GG.bloom(true);
+GG.bloomPass() @=> BloomPass bloom_pass; // pre-allocated
+bloom_pass.threshold(0.05);
 bloom_pass.intensity(1);
-bloom_pass.input(GG.renderPass().colorOutput());
-output_pass.input(bloom_pass.colorOutput());
+bloom_pass.levels(9);
+// bloom_pass.intensity(1);
 
 // white background
 TPlane background --> scene;
 C.WIDTH => background.scaX;
 C.HEIGHT_GLB => background.scaY;
 -90 => background.posZ;
-@(1., 1., 1.) * 5 => background.color;
+@(1., 1., 1.) * 0 => background.color;
 
 DrawEvent drawEvent;
 preMix @=> drawEvent.preMix; // pass audio bus to drawEvent for shapes
@@ -122,6 +128,7 @@ while (true) {
             1 => audioMode;
             0 => postMix.gain;          // disconnect preMix
             1 => mosaic.mosaicOut.gain; // connect mosaic
+            invertColor(1);
             <<< "[mode] Mosaic only" >>>;
         }
     }
@@ -131,6 +138,7 @@ while (true) {
             2 => audioMode;
             0 => mosaic.mosaicOut.gain; // disconnect mosaic
             1 => postMix.gain;          // ensure preMix connected
+            invertColor(0);
             <<< "[mode] PreMix only" >>>;
         }
     }
@@ -141,6 +149,14 @@ while (true) {
             1 => postMix.gain;          // ensure preMix connected
             1 => mosaic.mosaicOut.gain; // ensure mosaic connected
             <<< "[mode] Both (preMix + mosaic)" >>>;
+        }
+    }
+}
+
+fun void invertColor(int invert) {
+    for (auto @shape : drawEvent.shapes) {
+        if (shape != null) {
+            shape.invertColor(invert);
         }
     }
 }
