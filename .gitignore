@@ -7,3 +7,5 @@ lib/**
 *.mp4
 *.unitypackage
 imgui.ini
+*.zip
+*.tar.gz
